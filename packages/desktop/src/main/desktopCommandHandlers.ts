@@ -14,7 +14,6 @@ import {
   ZCODE_ENV,
   buildZCodeEndpointUrls,
   getCommunityUrlFromConfigs,
-  getFeedbackUrlFromConfig,
   normalizeZCodeEndpointOrigin,
   resolveZCodeEndpointOrigin,
 } from "@zcode/shared";
@@ -199,20 +198,6 @@ async function resolveRemoteAppConfigValue(options: {
   }
 
   return undefined;
-}
-
-export async function resolveFeedbackUrl(options: {
-  fetchRemoteConfig?: () => Promise<unknown>;
-  readLocalConfig?: () => unknown;
-  logger: {
-    warn: (...args: unknown[]) => void;
-  };
-}): Promise<string | undefined> {
-  return resolveRemoteAppConfigValue({
-    ...options,
-    logPrefix: "feedback",
-    resolveFromConfig: getFeedbackUrlFromConfig,
-  });
 }
 
 export async function resolveCommunityUrl(options: {

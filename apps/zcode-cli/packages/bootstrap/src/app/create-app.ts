@@ -32,6 +32,7 @@ import {
   createSessionEvent,
   type ExecutionShellSelection,
   type MessageId,
+  type AgentExecutionTelemetryPort,
 } from "@zcode/contracts";
 import { isRemoteWorkspaceIdentity, resolveZCodeRuntimeEnv } from "@zcode/shared";
 import {
@@ -190,10 +191,25 @@ export async function createZCodeApp(options: ZCodeAppOptions): Promise<ZCodeApp
     ...traceContextToLogContext(traceContext),
     module: "adapters.model",
   });
-  // 隐私定制：OTLP 遥测已移除，保留空实现满足运行时的可选挂载点。
+  // 隐私定制：OTLP 遥测已移除。保留结构合规的空实现——run 必须执行业务回调，
+  // captureCausation 返回 undefined，其余 span writer 方法均为 no-op。
+  const noopTelemetryWriter: AgentExecutionTelemetryPort = new Proxy(
+    {
+      captureCausation: () => undefined,
+      run: <T,>(execute: () => T): T => execute(),
+      startCommand: () => noopTelemetryWriter,
+    },
+    {
+      get(target, prop) {
+        if (prop in target) return Reflect.get(target, prop);
+        if (prop === "then") return undefined;
+        return () => noopTelemetryWriter;
+      },
+    },
+  ) as unknown as AgentExecutionTelemetryPort;
   const modelTelemetry = {
     statusSink: undefined,
-    agentExecution: undefined,
+    agentExecution: noopTelemetryWriter,
     shutdown: async () => {},
   };
   let nodeReplBrowserBroker: NodeReplBrowserBroker | undefined;

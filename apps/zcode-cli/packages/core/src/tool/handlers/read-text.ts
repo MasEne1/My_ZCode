@@ -66,6 +66,12 @@ export function formatReadTextOutput(output: ReadTextOutput): string {
   const partialViewPrefix = output.partialViewNotice
     ? `${formatReadToolResultWarning(output.partialViewNotice)}\n\n`
     : "";
+  const encodingNotice =
+    output.encoding && output.encoding !== "utf8"
+      ? `${formatReadToolResultWarning(
+          `Note: this file was decoded with ${output.encoding.toUpperCase()} encoding (auto-detected or requested). Edits to this file will be written back in the same encoding.`,
+        )}\n\n`
+      : "";
 
   if (!output.content) {
     const warning =
