@@ -26,10 +26,7 @@ import { getTaskListAttention, getTaskListRowActivity } from "@/v4/taskListRowAc
 import { TaskListItemContextMenu } from "@/TaskListItemContextMenu.js";
 import { TaskInteractionBadge } from "@/TaskInteractionBadge.js";
 import { useTaskListItemContextActions } from "@/useTaskListItemContextActions.js";
-import { useFeedbackStore } from "@/feedback/feedbackStore.js";
 import { useModelTrajectoryStore } from "@/store/modelTrajectoryStore.js";
-import { buildTaskFeedbackDescription } from "@/lib/taskFeedbackDraft.js";
-import { toast } from "@/components/ui/toast.js";
 import { buildTaskWorkspaceKey } from "@/lib/taskQueryCache.js";
 import { useV4SplitPaneEntry } from "@/v4/splitPaneEntryContext.js";
 import { buildWorkbenchSessionKey, useWorkbenchGroupStore } from "@/v4/workbenchGroupStore.js";
@@ -44,7 +41,6 @@ import { useOptionalTabStore } from "@/store/TabStoreProvider.js";
 import { isWorkspaceReadOnly } from "@/store/tabStore.js";
 import { TaskTitleOverflowText } from "@/components/TaskTitleOverflowText.js";
 import { createTaskWorkbenchDragPreview } from "@/lib/taskWorkbenchDragPreview.js";
-import { runUserAction } from "@/lib/userActionTelemetry.js";
 import { TaskRowActionButton } from "@/workspace-grouped-tasks/task-row-action-button.js";
 import { TaskWorkflowRunLines } from "@/components/workflow-run-line/TaskWorkflowRunLines.js";
 
@@ -248,12 +244,7 @@ export const MemoTaskItem = memo(function TaskListItem({
       id: task.forkedFromTaskId ? "taskList.forkedUntitled" : "taskList.untitled",
     });
   const handleSelect = useCallback(() => {
-    runUserAction({
-      input: { featureId: "task.lifecycle", action: "open", trigger: "button" },
-      operation: () => onSelectTask(task.taskId),
-      completed: { resultSource: "optimistic_projection" },
-      failureStage: "task_open",
-    });
+    onSelectTask(task.taskId);
   }, [onSelectTask, task.taskId]);
   const handleDragStart = useCallback(
     (event: React.DragEvent<HTMLLIElement>) => {
@@ -312,12 +303,7 @@ export const MemoTaskItem = memo(function TaskListItem({
       if (workspaceActionsDisabled) {
         return;
       }
-      runUserAction({
-        input: { featureId: "workbench.file", action: "open_tree", trigger: "button" },
-        operation: () => onOpenFileTree?.(task),
-        completed: { resultSource: "local_commit" },
-        failureStage: "file_tree_open",
-      });
+      onOpenFileTree?.(task);
     },
     [onOpenFileTree, task, workspaceActionsDisabled],
   );
@@ -329,12 +315,7 @@ export const MemoTaskItem = memo(function TaskListItem({
         event.stopPropagation();
         return;
       }
-      runUserAction({
-        input: { featureId: "task.lifecycle", action: "archive", trigger: "button" },
-        operation: () => onArchiveTaskInline(event, task.taskId),
-        completed: { resultSource: "optimistic_projection" },
-        failureStage: "task_archive",
-      });
+      onArchiveTaskInline(event, task.taskId);
     },
     [onArchiveTaskInline, task.taskId, workspaceActionsDisabled],
   );
@@ -830,7 +811,6 @@ export function TaskListItemContextMenuContent({
   );
   // 当前 focused session、已有 group 与 pane 上限统一由 shell owner 裁决；row 不再直接写 layout store。
   const canOpenInSplitPane = splitPaneEntry.canOpenSession(splitPaneTarget);
-  const openFeedbackSubmit = useFeedbackStore((state) => state.openSubmit);
   const {
     taskSessionFile,
     taskNativeSessionLogFile,
@@ -853,42 +833,6 @@ export function TaskListItemContextMenuContent({
     intl.formatMessage({
       id: task.forkedFromTaskId ? "taskList.forkedUntitled" : "taskList.untitled",
     });
-
-  const handleOpenTaskFeedback = useCallback(async () => {
-    // 任务右键菜单之前只能复制日志/路径，反馈时缺少任务上下文。
-    // 这里复用反馈中心 draft，只预填脱敏后的任务线索，附件由用户主动选择。
-    openFeedbackSubmit({
-      title: intl
-        .formatMessage(
-          { id: "feedback.submit.template.section.taskFeedbackTitle" },
-          { title: taskTitle },
-        )
-        .slice(0, 80),
-      type: "bug",
-      module: "Agent任务执行失败",
-      severity: "P2-中",
-      includeLogs: false,
-      description: buildTaskFeedbackDescription({
-        taskTitle,
-        taskId: task.taskId,
-        workspacePath,
-        taskSessionPath: taskSessionFile.path,
-        taskLogPath: taskNativeSessionLogFile.path,
-        formatMessage: (id: string, values?: Record<string, string>) =>
-          intl.formatMessage({ id }, values),
-      }),
-      screenshots: [],
-    });
-    toast(intl.formatMessage({ id: "taskList.feedbackOpened" }));
-  }, [
-    intl,
-    openFeedbackSubmit,
-    task.taskId,
-    taskNativeSessionLogFile.path,
-    taskSessionFile.path,
-    taskTitle,
-    workspacePath,
-  ]);
 
   return (
     <TaskListItemContextMenu
@@ -922,9 +866,6 @@ export function TaskListItemContextMenuContent({
           : undefined
       }
       openInSplitPaneDisabled={workspaceActionsDisabled || !canOpenInSplitPane}
-      onOpenTaskFeedback={() => {
-        void handleOpenTaskFeedback();
-      }}
       onOpenTaskPathInFileManager={() => {
         void handleOpenTaskPathInFileManager();
       }}

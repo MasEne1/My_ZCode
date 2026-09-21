@@ -91,6 +91,16 @@ const ReadProviderInputBaseSchema = z.object({
     .describe(
       "The number of lines to read. Only provide if the file is too large to read at once.",
     ),
+  /**
+   * Text encoding to decode the file with. Defaults to auto-detection
+   * (UTF-8 first, then GB2312/GBK/GB18030 for legacy Chinese text).
+   */
+  encoding: z
+    .enum(["utf8", "utf16le", "gb2312", "gbk", "gb18030"])
+    .optional()
+    .describe(
+      "Text encoding to decode the file with. Defaults to auto-detection (UTF-8 first, then GB2312/GBK/GB18030 for legacy Chinese text). Only set this when auto-detection picks the wrong encoding, for example 'gbk' for a legacy Chinese text file shown with mojibake.",
+    ),
 });
 
 const ReadProviderPdfInputSchema = ReadProviderInputBaseSchema.extend({
@@ -176,6 +186,8 @@ export interface ReadTextOutput {
   truncated?: boolean;
   truncatedByTokenCap?: boolean;
   partialViewNotice?: string;
+  /** Detected or requested text encoding; undefined means UTF-8. */
+  encoding?: string;
 }
 
 export interface ReadImageOutput {
@@ -270,6 +282,7 @@ export const ReadTextOutputSchema = z
     truncated: z.boolean().optional(),
     truncatedByTokenCap: z.boolean().optional(),
     partialViewNotice: z.string().optional(),
+    encoding: z.string().optional(),
   })
   .strict();
 

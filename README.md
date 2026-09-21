@@ -1,17 +1,26 @@
-# ZCode
+# My_ZCode
 
 <div align="center">
-  <img src="public/logo/icons/1024x1024.png" alt="ZCode" width="128" height="128" />
+  <img src="public/logo/icons/1024x1024.png" alt="My_ZCode" width="128" height="128" />
 </div>
-<p align="center">
-  <a href="https://applink.feishu.cn/client/chat/chatter/add_by_link?link_token=47ag983c-8fcb-4d6d-814b-5395193a712c&amp;qr_code=true">飞书社群</a> ·
-  <a href="https://discord.gg/z9aBcQXZQ3">Discord</a>
-</p>
 <p align="center">
   简体中文 | <a href="README.en.md">English</a>
 </p>
 
-ZCode 是 AI 编程工作台，提供桌面应用、浏览器界面和终端 Agent。本仓库包含客户端、后端服务、共享 UI，以及 Agent CLI 与运行时源码。
+My_ZCode 是基于 ZCode 开源版本的**隐私定制分支**，提供桌面应用、浏览器界面和终端 Agent。本仓库包含客户端、后端服务、共享 UI，以及 Agent CLI 与运行时源码。
+
+## 与上游 ZCode 的差异
+
+| 定制项 | 说明 |
+| ------ | ---- |
+| 移除全部遥测上报 | 数仓埋点、阿里云 ARMS 前端监控、OpenTelemetry 链路追踪、TTFT 指标全部删除，源码中不存在遥测出网出口 |
+| 移除自动更新与强制升级检查 | 不再向更新服务器请求更新清单，也不上送设备信息 |
+| 移除会话分享上传 | 分享发布、预检与上传链路整体删除 |
+| 移除反馈工单上传 | 工单、附件与诊断日志上传删除；本地"导出日志"功能保留 |
+| 应用图标替换 | 全平台桌面图标与 favicon 使用自定义图标 |
+| 文件读取编码支持 | Read 工具新增 `encoding` 参数，支持 GBK / GB2312 / GB18030 / UTF-16LE；默认自动检测，编辑后按原编码写回 |
+
+**保留的联网功能**（详见 [NOTICE.md](NOTICE.md) 上传接口披露）：模型与辅助模型请求、账号登录与 OAuth、套餐额度与账单查询、模型列表远端热更新、插件市场与远程工作区资源下载。
 
 | 入口                 | 用途                                                           | 开发命令                       |
 | -------------------- | -------------------------------------------------------------- | ------------------------------ |
@@ -220,4 +229,4 @@ node dist/zcode/debug/zcode/bin/zcode.mjs --web \
 
 ## 项目声明
 
-功能与优惠范围、维护规则、执行与数据风险，以及许可和第三方版权说明，详见 [NOTICE.md](NOTICE.md)。
+本分支的定制范围与上游功能差异以上方「与上游 ZCode 的差异」为准。功能与优惠范围、维护规则、执行与数据风险，以及许可和第三方版权说明，详见 [NOTICE.md](NOTICE.md)。

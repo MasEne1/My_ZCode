@@ -139,7 +139,7 @@ function stringifyReadOutputFallback(output: unknown): string {
 }
 
 const readHandler: ToolHandler = async (input, context) => {
-  const { file_path, offset, limit, pages } = parseReadInput(input);
+  const { file_path, offset, limit, pages, encoding } = parseReadInput(input);
   const fileSystemPort = context.fileSystemPort;
 
   if (!fileSystemPort) {
@@ -200,6 +200,7 @@ const readHandler: ToolHandler = async (input, context) => {
     let rangeReadRevision: FileSystemStatResult["revision"] | undefined;
     const output = await readTextFileForModel({
       abortSignal: context.abortSignal,
+      encoding,
       filePath,
       fileSystemPort,
       limit,

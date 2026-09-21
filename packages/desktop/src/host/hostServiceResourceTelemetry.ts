@@ -4,7 +4,6 @@ import type { IDisposable } from "@zcode/rpc";
 import { IZCodeAgentService, type ServiceCollection } from "@zcode/services";
 import type { ProcessResourceRuntimeSurface } from "@zcode/shared";
 import { registerHostAgentResourceTelemetry } from "./hostAgentResourceTelemetry.js";
-import { registerHostMcpTelemetry } from "./hostMcpTelemetry.js";
 
 interface RegisterHostServiceResourceTelemetryOptions {
   services: Pick<ServiceCollection, "getOptional">;
@@ -62,13 +61,6 @@ export function registerHostServiceResourceTelemetry(
         postMessage: options.postMessage,
         runtimeSurface: options.runtimeSurface,
         environmentKey: options.environmentKey,
-      }),
-    );
-    registrations.push(
-      registerHostMcpTelemetry({
-        agentService,
-        postMessage: options.postMessage,
-        runtimeSurface: options.runtimeSurface,
       }),
     );
     registrations.push(

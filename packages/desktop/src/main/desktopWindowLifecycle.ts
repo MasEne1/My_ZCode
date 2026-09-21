@@ -3,7 +3,6 @@ import { randomUUID } from "node:crypto";
 import { app, BrowserWindow, Menu, MessageChannelMain } from "electron";
 import type { UtilityProcess as ElectronUtilityProcess } from "electron";
 import { HostMessageTypes, InternalChannels, PlatformChannels, type Locale } from "@zcode/shared";
-import { scheduleArmsBrowserPerfLoadNudge } from "./armsBrowserPerfLoadNudge.js";
 import { createBrowserWindow } from "./desktopWindowChrome.js";
 import type { HostInitMessage, WindowBootstrapOptions } from "./desktopHostProcess.js";
 import type { StartupWorkspaceWarmupTarget } from "./startupWorkspace.js";
@@ -38,9 +37,6 @@ export function createWindow(options: {
     label: string,
     forceKillDelayMs?: number,
   ) => void;
-  syncAutoUpdaterStateToWindow: (win: BrowserWindow) => void;
-  syncReadyUpdateToWindow: (win: BrowserWindow) => void;
-  syncPostUpdateReleaseNotesToWindow: (win: BrowserWindow) => void;
   disposeRemoteWorkspaceSessionsForWindow: (windowId: number, reason: string) => void;
   reattachRemoteWorkspaceSessionsForWindow: (win: BrowserWindow, reason: string) => void;
   bootstrap?: WindowBootstrapOptions;
@@ -121,7 +117,6 @@ export function createWindow(options: {
   registerMainApplicationWindow(wcId);
   let domReadyGeneration = 0;
   let cancelRuntimeProcessEnvWait: (() => void) | null = null;
-  scheduleArmsBrowserPerfLoadNudge(win.webContents);
   win.webContents.on("dom-ready", async () => {
     cancelRuntimeProcessEnvWait?.();
     cancelRuntimeProcessEnvWait = null;
@@ -159,9 +154,6 @@ export function createWindow(options: {
         options.logger.info(
           `[createWindow] renderer reloaded, reattached to existing host (${label}), pid=${oldChild.pid}`,
         );
-        options.syncAutoUpdaterStateToWindow(win);
-        options.syncReadyUpdateToWindow(win);
-        options.syncPostUpdateReleaseNotesToWindow(win);
         options.reattachRemoteWorkspaceSessionsForWindow(win, `${label}:renderer-reload`);
         return;
       } catch (error) {
@@ -205,9 +197,6 @@ export function createWindow(options: {
       });
       options.windowHostProcessMap.set(wcId, child);
       options.onHostProcessReady?.(wcId);
-      options.syncAutoUpdaterStateToWindow(win);
-      options.syncReadyUpdateToWindow(win);
-      options.syncPostUpdateReleaseNotesToWindow(win);
       options.reattachRemoteWorkspaceSessionsForWindow(win, `${label}:renderer-ready`);
     };
 

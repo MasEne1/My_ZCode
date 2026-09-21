@@ -20,6 +20,7 @@ const READ_TOKEN_BUDGET_PARTIAL_TARGET = Math.floor(READ_MAX_OUTPUT_TOKENS * 0.8
 interface ReadTextFileForModelOptions {
   abortSignal?: AbortSignal;
   allowPartialFallback?: boolean;
+  encoding?: "utf8" | "utf16le" | "gb2312" | "gbk" | "gb18030";
   filePath: string;
   fileSystemPort: FileSystemPort;
   limit?: number;
@@ -31,6 +32,7 @@ interface ReadTextFileForModelOptions {
 export async function readTextFileForModel({
   abortSignal,
   allowPartialFallback,
+  encoding,
   filePath,
   fileSystemPort,
   limit,
@@ -45,6 +47,7 @@ export async function readTextFileForModel({
       offsetLine: toRangeOffsetLine(offset),
       limitLines: limit,
       maxBytes: limitProvided ? undefined : READ_MAX_FILE_SIZE_BYTES,
+      encoding,
       trace,
     },
     { signal: abortSignal },
@@ -76,7 +79,7 @@ export function formatReadTextOutput(output: ReadTextOutput): string {
 
   // 成功文本结果的模型可见契约只包含条件提醒与带行号正文；
   // 历史安全提醒不属于当前 tool result 路径。
-  return `${partialViewPrefix}${addReadLineNumbers({
+  return `${encodingNotice}${partialViewPrefix}${addReadLineNumbers({
     content: output.content,
     startLine: output.startLine,
   })}`;
@@ -138,6 +141,7 @@ function readTextRangeResultToOutput({
     totalLines: read.totalLines,
     sizeBytes: read.sizeBytes,
     bytesRead: read.bytesRead,
+    encoding: read.encoding !== "utf8" ? read.encoding : undefined,
     truncated: read.truncated,
   });
 }
