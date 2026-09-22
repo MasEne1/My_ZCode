@@ -2,7 +2,6 @@
 import type {
   ApiClient,
   ApiRequestInit,
-  ForceUpdateConfig,
   CodingPlanAgreementResponse,
   CodingPlanBatchPreviewRequest,
   CodingPlanBatchPreviewResponse,
@@ -101,7 +100,6 @@ interface ZCodeClientConfigEnvelope {
   success?: boolean;
   data?: {
     configs?: {
-      forceUpdate?: ForceUpdateConfig | null;
       codingPlanStaticProducts?: CodingPlanStaticProductsConfig;
       codingPlanStaticTeamProducts?: CodingPlanStaticTeamProductsConfig;
       startPlanPreview?: StartPlanPreviewConfig | null;
@@ -271,11 +269,6 @@ export class BigModelCodingPlanSubscriptionProvider {
   async getModelContextBudgetStrategy(): Promise<ZCodeModelContextBudgetStrategy> {
     // 3.12.2：预算统一为 preflight-v1；保留兼容方法，但不能再为每次建会话等待远端配置。
     return DEFAULT_ZCODE_MODEL_CONTEXT_BUDGET_STRATEGY;
-  }
-
-  async getForceUpdateConfig(): Promise<ForceUpdateConfig | null> {
-    const payload = await this.getClientConfigs();
-    return unwrapClientConfigForceUpdate(payload);
   }
 
   async preview(request: CodingPlanPreviewRequest): Promise<CodingPlanPreviewResponse> {
@@ -1216,26 +1209,6 @@ function unwrapClientConfigStartPlanPreview(
   };
 }
 
-function unwrapClientConfigForceUpdate(
-  payload: ZCodeClientConfigEnvelope,
-): ForceUpdateConfig | null {
-  if (payload.code !== undefined && payload.code !== 0) {
-    throw new Error(payload.msg?.trim() || "ZCode client config request failed");
-  }
-
-  const forceUpdate = payload.data?.configs?.forceUpdate;
-  if (!forceUpdate) {
-    return null;
-  }
-
-  const minimalVersion = forceUpdate.minimalVersion;
-  if (typeof minimalVersion !== "string" || minimalVersion.trim() === "") {
-    return null;
-  }
-
-  return { minimalVersion: minimalVersion.trim() };
-}
-
 function isValidStartPlanPreviewEntitlement(
   entitlement: StartPlanPreviewConfig["entitlements"][number],
 ): boolean {
@@ -1339,9 +1312,10 @@ export function resolveOffPeakClientConfig(
       codingPlanActive: env["ZCODE_OFFPEAK_MOCK_NO_PLAN"] !== "1",
     };
   }
-  const raw = payload.data?.configs?.offPeak;
+  // 隐私定制:服务端 offPeak 远程开启开关已永久关闭,enabled 恒 false。
+  void payload;
   return {
-    enabled: raw?.enable_offpeak_task === true && hasModels,
+    enabled: false,
     modelSelectionView,
   };
 }

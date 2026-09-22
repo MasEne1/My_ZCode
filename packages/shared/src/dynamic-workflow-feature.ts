@@ -57,20 +57,11 @@ export function createDynamicWorkflowClientConfig(
 
 /**
  * 纯函数：把远端 envelope 的 `configs.dynamicWorkflow` 与本地覆盖环境变量折叠成一个快照。
- * 优先级：覆盖 > 远端合法值 > 缺省。远端成功但**未下发**该 key 也视为 disabled——
- * 服务端撤掉 key 等于关闭，不能沿用旧快照（与 desktopContextPromptRollout 同一裁决）。
+ * 隐私定制：服务端灰度通道已永久关闭——无论远端与本地覆盖下发什么，恒为 disabled。
  */
-export function resolveDynamicWorkflowClientConfig(input: {
+export function resolveDynamicWorkflowClientConfig(_input: {
   remote: unknown;
   env?: Record<string, string | undefined>;
 }): DynamicWorkflowClientConfig {
-  const override = normalizeDynamicWorkflowMode(input.env?.[ZCODE_DYNAMIC_WORKFLOW_MODE_ENV]);
-  if (override) return createDynamicWorkflowClientConfig(override, "override");
-  const remoteMode = normalizeDynamicWorkflowMode(
-    typeof input.remote === "object" && input.remote !== null
-      ? (input.remote as { mode?: unknown }).mode
-      : undefined,
-  );
-  if (remoteMode) return createDynamicWorkflowClientConfig(remoteMode, "remote");
   return createDynamicWorkflowClientConfig(DEFAULT_DYNAMIC_WORKFLOW_MODE, "default");
 }
