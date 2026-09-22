@@ -1,4 +1,5 @@
 import { cn } from "@/components/lib/utils.js";
+import brandIcon from "@/assets/brand-icon.png";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -31,7 +32,6 @@ interface DesktopTopOverlayProps {
   canGoBack: boolean;
   canGoForward: boolean;
   showNewTaskButton?: boolean;
-  appLogoUrl: string;
   onToggleSidebar: () => void;
   onCreateTask: () => void;
   onGoBack: () => void;
@@ -58,7 +58,6 @@ export function DesktopTopOverlay({
   canGoBack: _canGoBack,
   canGoForward: _canGoForward,
   showNewTaskButton,
-  appLogoUrl,
   onToggleSidebar,
   onCreateTask,
   onGoBack,
@@ -132,8 +131,8 @@ export function DesktopTopOverlay({
               onClick={onToggleSidebar}
             >
               <img
-                src={appLogoUrl}
-                alt="ZCode"
+                src={brandIcon}
+                alt="My_ZCode"
                 className="size-5 transition-opacity duration-150 group-hover:opacity-0"
                 draggable={false}
               />
